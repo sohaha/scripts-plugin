@@ -153,14 +153,12 @@ var ScriptsPlugin = function (_Plugin) {
 		_this.runScripts = function () {
 			var scope = _this.options.head && _this.options.body ? document : _this.options.head ? document.head : document.body;
 
-			var selector = _this.options.optin ? 'script[data-swup-reload-script]' : 'script:not([data-swup-ignore-script])';
+			var selector = _this.options.optin ? 'script[data-reload-script]' : 'script:not([data-ignore-script])';
 			var scripts = arrayify(scope.querySelectorAll(selector));
 
 			scripts.forEach(function (script) {
 				return _this.runScript(script);
 			});
-
-			_this.swup.log('Executed ' + scripts.length + ' scripts.');
 		};
 
 		_this.runScript = function (originalElement) {
@@ -196,6 +194,16 @@ var ScriptsPlugin = function (_Plugin) {
 			element.textContent = originalElement.textContent;
 			element.setAttribute('async', 'false');
 
+			var url = element.attributes.src ? element.attributes.src.value : "";
+			// console.log(url);
+			if (url) {
+				var done = function done() {
+					var event = new CustomEvent("loaded-script:" + url);
+					document.dispatchEvent(event);
+				};
+
+				element.addEventListener("load", done);
+			}
 			originalElement.replaceWith(element);
 			return element;
 		};

@@ -33,15 +33,13 @@ export default class ScriptsPlugin extends Plugin {
 			this.options.head && this.options.body
 				? document
 				: this.options.head
-				? document.head
-				: document.body;
+					? document.head
+					: document.body;
 
-		const selector = this.options.optin ? 'script[data-swup-reload-script]' : 'script:not([data-swup-ignore-script])';
+		const selector = this.options.optin ? 'script[data-reload-script]' : 'script:not([data-ignore-script])';
 		const scripts = arrayify(scope.querySelectorAll(selector));
 
-		scripts.forEach((script) => this.runScript(script));
-
-		this.swup.log(`Executed ${scripts.length} scripts.`);
+		scripts.forEach((script) => this.runScript(script))
 	};
 
 	runScript = (originalElement) => {
@@ -53,6 +51,15 @@ export default class ScriptsPlugin extends Plugin {
 		element.textContent = originalElement.textContent;
 		element.setAttribute('async', 'false');
 
+		const url = element.attributes.src ? element.attributes.src.value : ""
+		// console.log(url);
+		if (url) {
+			function done() {
+				const event = new CustomEvent("loaded-script:" + url)
+				document.dispatchEvent(event)
+			}
+			element.addEventListener("load", done)
+		}
 		originalElement.replaceWith(element);
 		return element;
 	};
